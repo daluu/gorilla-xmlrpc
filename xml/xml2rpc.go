@@ -138,6 +138,10 @@ func value2Field(value value, field *reflect.Value) error {
 			// methods in lowercase, which cannot be used
 			field_name := uppercaseFirst(s[i].Name)
 			f := field.FieldByName(field_name)
+			emptyValue := reflect.Value{}
+			if f == emptyValue {
+				f = field.FieldByName("N" + field_name)
+			}
 			err = value2Field(s[i].Value, &f)
 		}
 	case len(value.Array) != 0:
@@ -161,7 +165,9 @@ func value2Field(value value, field *reflect.Value) error {
 	}
 
 	if val != nil {
-		if reflect.TypeOf(val) != reflect.TypeOf(field.Interface()) {
+		var iface interface{}
+		if reflect.TypeOf(field.Interface()) != reflect.TypeOf(iface) &&
+			reflect.TypeOf(val) != reflect.TypeOf(field.Interface()) {
 			fault := FaultInvalidParams
 			fault.String += fmt.Sprintf(": fields type mismatch: %s != %s",
 				reflect.TypeOf(val),
